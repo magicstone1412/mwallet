@@ -1,11 +1,12 @@
-### lru-dict version 1.1.8 only support python version 3.10 
-FROM python:3.10.14-alpine3.19 
+FROM python:3.13-alpine
+
+RUN pip install --upgrade pip
 
 LABEL Maintainer="skywirex.com"
 
 WORKDIR /app
 
-COPY * ./
+COPY . .
 
 ## set blank ENV
 ARG TELEGRAM_BOT_TOKEN
@@ -27,4 +28,4 @@ RUN apk --no-cache add ca-certificates #Avoid an error occurred: HTTPSConnection
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD [ "python", "./main.py"]
+## CMD [ "python", "./main.py"]
