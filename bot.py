@@ -7,7 +7,7 @@ from web3 import Web3  # Import thư viện web3.py để kiểm tra checksum ad
 
 
 def start(update, context):
-    message = "Welcome! Use /add <wallet> <blockchain> or /remove <wallet> <blockchain>."
+    message = "Welcome! Use /add <blockchain> <wallet> or /remove <blockchain> <wallet>."
     context.bot.send_message(chat_id=update.message.chat_id, text=message)
 
 
@@ -50,13 +50,12 @@ def is_valid_checksum_address(wallet_address):
 def add(update, context):
     if len(context.args) < 2:
         context.bot.send_message(chat_id=update.message.chat_id,
-                                 text="Please provide a wallet address and a blockchain to add.\nUsage: `/add <wallet> <blockchain>`",
-                                 parse_mode="Markdown")
+                                 text="Please provide a blockchain and a wallet address to add.")
         return
 
     # Trim whitespace from input data
-    wallet_address = context.args[0].strip()
-    blockchain = context.args[1].strip().lower()
+    blockchain = context.args[0].strip().lower()
+    wallet_address = context.args[1].strip()
 
     # Validate blockchain
     if blockchain not in ["eth", "bnb"]:
@@ -83,10 +82,10 @@ def add(update, context):
 
 def remove(update, context):
     if len(context.args) < 2:
-        update.message.reply_text("Usage: /remove <wallet> <blockchain>")
+        update.message.reply_text("Usage: /remove <blockchain> <wallet_address>")
         return
 
-    wallet_address, blockchain = context.args[0], context.args[1].lower()
+    blockchain, wallet_address = context.args[0].lower(), context.args[1]
 
     with open(WALLETS_FILE, 'r') as f:
         lines = f.readlines()
@@ -105,4 +104,3 @@ def setup_bot():
     dispatcher.add_handler(CommandHandler('add', add))
     dispatcher.add_handler(CommandHandler('remove', remove))
     updater.start_polling()
-
