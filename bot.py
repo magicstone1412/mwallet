@@ -3,10 +3,11 @@ import os
 from telegram.ext import Updater, CommandHandler
 from config import TELEGRAM_BOT_TOKEN, WALLETS_FILE
 from wallet_monitor import monitor_wallets
+from web3 import Web3  # Import thư viện web3.py để kiểm tra checksum address
 
 
 def start(update, context):
-    message = "Welcome! Use /add <blockchain> <wallet> or /remove <blockchain> <wallet>."
+    message = "Welcome! Use /add <wallet> <blockchain> or /remove <wallet> <blockchain>."
     context.bot.send_message(chat_id=update.message.chat_id, text=message)
 
 
@@ -38,15 +39,24 @@ def add_wallet(wallet_address, blockchain):
     return True, wallets + [wallet_entry]  # Add wallet and return updated list
 
 
+def is_valid_checksum_address(wallet_address):
+    """Check if the Ethereum/BSC wallet address is valid using EIP-55 checksum."""
+    if not Web3.isAddress(wallet_address):
+        return False  # Không phải địa chỉ hợp lệ
+
+    return Web3.isChecksumAddress(wallet_address)  # Kiểm tra checksum theo chuẩn EIP-55
+
+
 def add(update, context):
     if len(context.args) < 2:
         context.bot.send_message(chat_id=update.message.chat_id,
-                                 text="Please provide a blockchain and a wallet address to add.")
+                                 text="Please provide a wallet address and a blockchain to add.\nUsage: `/add <wallet> <blockchain>`",
+                                 parse_mode="Markdown")
         return
 
     # Trim whitespace from input data
-    blockchain = context.args[0].strip().lower()
-    wallet_address = context.args[1].strip()
+    wallet_address = context.args[0].strip()
+    blockchain = context.args[1].strip().lower()
 
     # Validate blockchain
     if blockchain not in ["eth", "bnb"]:
@@ -54,9 +64,9 @@ def add(update, context):
         return
 
     # Validate wallet address format
-    if not re.match(r"^0x[a-fA-F0-9]{40}$", wallet_address):
+    if not re.match(r"^0x[a-fA-F0-9]{40}$", wallet_address) or not is_valid_checksum_address(wallet_address):
         context.bot.send_message(chat_id=update.message.chat_id,
-                                 text=f"{wallet_address} is not a valid wallet address.")
+                                 text=f"❌ {wallet_address} is not a valid checksum wallet address.")
         return
 
     added, wallets = add_wallet(wallet_address, blockchain)
@@ -73,10 +83,10 @@ def add(update, context):
 
 def remove(update, context):
     if len(context.args) < 2:
-        update.message.reply_text("Usage: /remove <blockchain> <wallet_address>")
+        update.message.reply_text("Usage: /remove <wallet> <blockchain>")
         return
 
-    blockchain, wallet_address = context.args[0].lower(), context.args[1]
+    wallet_address, blockchain = context.args[0], context.args[1].lower()
 
     with open(WALLETS_FILE, 'r') as f:
         lines = f.readlines()
@@ -95,3 +105,4 @@ def setup_bot():
     dispatcher.add_handler(CommandHandler('add', add))
     dispatcher.add_handler(CommandHandler('remove', remove))
     updater.start_polling()
+
