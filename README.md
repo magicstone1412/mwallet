@@ -25,6 +25,19 @@ docker run -d --name mwallet \
 
 Group chat ID: https://stackoverflow.com/questions/32423837/telegram-bot-how-to-get-a-group-chat-id
 
+
+## Structure
+
+/crypto_bot
+│── bot.py
+│── config.py
+│── main.py
+│── utils.py
+│── wallet_monitor.py
+│── requirements.txt
+│── Dockerfile
+│── .env
+
 ## Disclaimer
 
 This bot is provided for educational purposes only and should not be used as financial advice. The bot does not have access to your wallet.
